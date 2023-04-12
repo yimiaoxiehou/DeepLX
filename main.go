@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -183,7 +185,13 @@ func main() {
 			request.Header.Set("x-app-version", "2.6")
 			request.Header.Set("Connection", "keep-alive")
 
-			client := &http.Client{}
+			var client http.Client
+			if httpProxy := os.GetEnv("HTTP_PROXY"); httpProxy != "" {
+				proxy, _ := url.Parse(httpProxy)
+                        	client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}}
+			} else {
+				client = &http.Client{}
+			}
 			resp, err := client.Do(request)
 			if err != nil {
 				log.Println(err)

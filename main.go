@@ -107,14 +107,6 @@ func main() {
 	// create a random id
 	id := getRandomNumber()
 
-	var client *http.Client
-	if httpProxy := os.Getenv("HTTP_PROXY"); httpProxy != "" {
-		proxy, _ := url.Parse(httpProxy)
-		client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}}
-	} else {
-		client = &http.Client{}
-	}
-
 	// set release mode
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -192,6 +184,13 @@ func main() {
 			request.Header.Set("x-app-version", "2.6")
 			request.Header.Set("Connection", "keep-alive")
 
+			var client *http.Client
+			if httpProxy := os.Getenv("HTTP_PROXY"); httpProxy != "" {
+				proxy, _ := url.Parse(httpProxy)
+				client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}}
+			} else {
+				client = &http.Client{}
+			}
 			resp, err := client.Do(request)
 			if err != nil {
 				log.Println(err)

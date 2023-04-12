@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -107,6 +107,14 @@ func main() {
 	// create a random id
 	id := getRandomNumber()
 
+	var client *http.Client
+	if httpProxy := os.Getenv("HTTP_PROXY"); httpProxy != "" {
+		proxy, _ := url.Parse(httpProxy)
+		client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}}
+	} else {
+		client = &http.Client{}
+	}
+
 	// set release mode
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -141,7 +149,6 @@ func main() {
 				"message": "No Translate Text Found",
 			})
 		} else {
-			url := "https://www2.deepl.com/jsonrpc"
 			id = id + 1
 			postData := initData(sourceLang, targetLang)
 			text := Text{
@@ -166,7 +173,7 @@ func main() {
 
 			post_byte = []byte(postStr)
 			reader := bytes.NewReader(post_byte)
-			request, err := http.NewRequest("POST", url, reader)
+			request, err := http.NewRequest("POST", "https://www2.deepl.com/jsonrpc", reader)
 			if err != nil {
 				log.Println(err)
 				return
@@ -185,13 +192,6 @@ func main() {
 			request.Header.Set("x-app-version", "2.6")
 			request.Header.Set("Connection", "keep-alive")
 
-			var client http.Client
-			if httpProxy := os.GetEnv("HTTP_PROXY"); httpProxy != "" {
-				proxy, _ := url.Parse(httpProxy)
-                        	client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}}
-			} else {
-				client = &http.Client{}
-			}
 			resp, err := client.Do(request)
 			if err != nil {
 				log.Println(err)
